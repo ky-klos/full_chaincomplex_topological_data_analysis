@@ -164,6 +164,7 @@ class TopologicalAnalysis():
 
 
     def saw(self, angle_one, angle_two):
+        """returns the smallest difference between two angles"""
         difference = angle_one - angle_two
 
         if np.abs(difference - two_pi) < np.abs(difference):
@@ -174,28 +175,24 @@ class TopologicalAnalysis():
         return difference
     
     def saw_batch(self, angle_one, angle_two):
+        """returns the smallest difference between two angles, batched version"""
         
-        #print(angle_one.shape)
         difference = angle_one - angle_two
         return_diff = np.copy(difference)
-        #print(difference.shape)
-
+        
         change_condition_1 = np.abs(difference - two_pi) < np.abs(difference)
-        #print(change_condition_1)
         change_condition_index_1 = change_condition_1.nonzero()
-        #print(difference)
+        
         change_condition_2 = np.abs(difference + two_pi) < np.abs(difference)
         change_condition_index_2 = change_condition_2.nonzero()
 
-
-
         return_diff[change_condition_index_1] = difference[change_condition_index_1] - two_pi
         return_diff[change_condition_index_2] = difference[change_condition_index_2] + two_pi
-        #print(return_diff)
-
+        
         return return_diff
 
     def setAngleInterval(self,angle):
+        """sets angle in intervall [0,2pi)"""
 
         if angle >= two_pi:
             return_angle = angle%two_pi
@@ -209,6 +206,7 @@ class TopologicalAnalysis():
         return return_angle
     
     def setAngleInterval_batch(self,angle_batch):
+        """sets angle in intervall [0,2pi), batched version"""
 
         return_angle_batch = np.copy(angle_batch)
 
@@ -219,17 +217,14 @@ class TopologicalAnalysis():
 
         indizes_small = angle_batch < -two_pi
         indizes_middle =  np.logical_and(indizes_less_zero,indizes_small)
-        #print(indizes_less_zero)
-        #print(indizes_small)
-        #print(indizes_middle)
+       
         
 
         indizes_larger_1 = indizes_larger.nonzero()
         indizes_middle_1 = indizes_middle.nonzero()
         indizes_small_1 = indizes_small.nonzero()
 
-        #print(indizes_middle)
-
+       
         return_angle_batch[indizes_larger_1] = angle_batch[indizes_larger_1]%two_pi
         return_angle_batch[indizes_middle_1] = angle_batch[indizes_middle_1]+two_pi
         return_angle_batch[indizes_small_1] = angle_batch[indizes_small_1]%two_pi
@@ -237,7 +232,11 @@ class TopologicalAnalysis():
         return return_angle_batch
     
     def defect_position_tensor(self,maximal_defect_number,input_defect_lattice= None):
-
+        """
+        Returns a tensor of defect positions and the average distance between defects
+        Returns: defect_position_vector: Tensor of shape (maximal_defect_number,3) with each row being (x_position,y_position,defect_type)
+                    defect_distance: average distance between closest defects (mean distance between min distance of vortices to each anti-vortices)
+        """
 
         counter = 0
 
@@ -246,10 +245,7 @@ class TopologicalAnalysis():
         else:
             defect_lattice = input_defect_lattice
 
-        #number_of_defects = torch.sum(torch.abs(defect_lattice))
-
         defect_position_vector = torch.zeros(int(maximal_defect_number),3,device = self.device)
-
 
         for i in range(self.lattice_size):
             for j in range(self.lattice_size):
@@ -261,31 +257,26 @@ class TopologicalAnalysis():
 
         if counter == 0:
             defect_distance = torch.tensor(0)
-            #print(defect_distance)
+           
         elif counter == 2:
             defect_distance = torch.sqrt(torch.pow((defect_position_vector[0,0]-defect_position_vector[1,0]),2) +torch.pow((defect_position_vector[0,1]-defect_position_vector[1,1]),2))
-            #print(defect_distance)
+
         else:
-            #print(counter,defect_position_vector)
             vortices = defect_position_vector[defect_position_vector[:,2]== 1]
             anti_vortices = defect_position_vector[defect_position_vector[:,2]== -1]
-
             defect_distances_list = torch.zeros(int(counter/2))
 
-            #print(counter)
-
+     
+            #for each anti-vortex find distance to closest vortex
             for c in range(int(counter/2)):
-
-
                 defect_distances_list[c] = torch.min(torch.sqrt(torch.pow((vortices[:,0]-anti_vortices[c,0]),2) +torch.pow((vortices[:,1]-anti_vortices[c,1]),2)))
 
             defect_distance = torch.mean(defect_distances_list)
         
-
-        #print('caluclated_defects',position_vector)
-
         return defect_position_vector, defect_distance
     
+
+    #TODO: used somewhere else
     def defect_position_tensor_simult(self,maximal_defect_number,input_defect_lattices= None):
 
 
@@ -404,6 +395,7 @@ class TopologicalAnalysis():
     def get_defect_distance_xy(self):
         return self.full_defect_distance_x,self.full_defect_distance_y
 
+    #TODO: is used in other
     def set_full_defect_positions_simultanously(self,defect_lattices,maximal_defect_nmb=2):
 
         defect_position,defect_distance = self.defect_position_tensor_simult(maximal_defect_number=maximal_defect_nmb,input_defect_lattices = defect_lattices)
@@ -418,16 +410,7 @@ class TopologicalAnalysis():
     def return_full_defect_distances(self):
         return self.full_defect_distance
     
-    def get_full_defect_distance(self, defect_nmb):
-       
-       ##only for two defects
 
-       anti_vortices = self.full_defect_positions[:,:, 2]== -1
-       vortices = self.full_defect_positions[:,:, 2]== 1
-       no_defects = self.full_defect_positions[:,:, 2]== 0
-
-    ##    np.array([np.sqrt(((defects[0]-current_cluster_com[0])**2+(defects[1]-current_cluster_com[1])**2)/2.0)
-    
     def set_analytic_spin_config_tensor(self,input_defect_positions=None, input_vortex_numb = 2):
 
         self.spin_position = torch.from_numpy(np.asarray([[[i*self.lattice_spacing,j*self.lattice_spacing] for j in range(self.lattice_size)] for i in range(self.lattice_size)]))
@@ -474,6 +457,7 @@ class TopologicalAnalysis():
 
             return analytic_solution
     
+    #TODO: not used
     def set_analytic_spin_lattices(self, unique_defect_lattices, defect_nb_list):
    
 
@@ -500,36 +484,40 @@ class TopologicalAnalysis():
     
     
 
-
+    #TODO: not used
     def epsilon_change(self,change=0.0175):
         self.epsilon += change # 1 angle grad in rad
-        #print(self.epsilon)
-
+        
+    #TODO: not used
     def epsilon_change_multible(self,times,change=0.0175):
         self.epsilon = times*change # 1 angle grad in rad
-        #print(self.epsilon)
 
+    #TODO: not used, shouldnt be, breaks itself :D
     def vertex(self):
         vertex = np.ones((self.lattice_size)*(self.lattice_size))
         self.vertex = vertex
         return vertex
 
+    #TODO: not used
     def set_edge_matrix(self, edge_matrix_x, edge_matrix_y):
         self.edges_x = edge_matrix_x
         self.edges_y = edge_matrix_y
 
+    #TODO: not used
     def set_plaquette_matrix(self, plaquette_matrix):
         self.plaquettes = plaquette_matrix
 
+    #TODO: not used
     def set_batch_edge_matrix(self, edge_batch_matrix_x, edge_batch_matrix_y):
         self.edges_x_batch = edge_batch_matrix_x
         self.edges_y_batch = edge_batch_matrix_y
 
+    #TODO: not used
     def set_batch_plaquette_matrix(self, plaquette_batch_matrix):
         self.plaquettes_batch = plaquette_batch_matrix
 
 
-
+    #TODO: not used
     def edge_matrix_batch(self, spin_lattice,batch):
         spin_lattice_array = spin_lattice.reshape(-1,self.lattice_size*self.lattice_size)
         edges_x = np.zeros((batch,self.lattice_size*self.lattice_size))
@@ -559,6 +547,7 @@ class TopologicalAnalysis():
 
         return edges_x, edges_y
     
+    #TODO: not used
     def make_full_edge_matrix(self, epsilon, edge_x, edge_y, plaq):
 
         full_edges = torch.zeros((edge_x.size(0),self.lattice_size*2,self.lattice_size*2))
@@ -774,6 +763,7 @@ class TopologicalAnalysis():
             #self.edge_ordering[epsilon][idx].append((full_edge_matrix_list[idx]==1).nonzero())
             #self.plaquette_ordering[epsilon][idx].append((full_edge_matrix_list[idx]==4).nonzero())
 
+    #TODO: used other
     def return_implices_ordering(self):
         return self.edge_ordering,self.plaquette_ordering
 

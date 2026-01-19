@@ -80,7 +80,10 @@ from training_september_25_fixed_sum_fourier_changed_critic import CircularUpsca
     ###gen: low: "#AE76A3"; mid:r"#d1bbd7" ; high: r"#882e72"
     
     ### colortypes_list = [sb.color_palette("BuPu"),sb.color_palette("YlGn"),sb.color_palette("GnBu"),sb.color_palette("OrRd")]
+def testing_correlation_function(simualted_data_path='/localscratch/kklos/XY_Cluster_rust_sim_data/',temperature=0.1, lattice_size = 16):
+    simul_spin = pd.read_csv(simualted_data_path+'new_cluster_spin_data_observables_{}_{}_0.csv'.format(temperature, lattice_size), delimiter=',', skipinitialspace= True, header = 0)
     
+
 def define_colors():
     colortypes_gen = [r'#77aadd',r'#9398d2', r'#ee99aa',r'#bbcc33',r'#44bb99']
     colortypes_sim = [r'#332288',r'#762a83', r'#882255', r'#997700',r'#225522']
