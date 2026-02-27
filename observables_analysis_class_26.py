@@ -555,6 +555,7 @@ class Observables():
         self.magent_tensor_mean_y_2 = torch.mean(torch.pow(spin_lattice_tensor_sin,2))
 
         self.magent_tensor_mean_full_2 = torch.mean(torch.pow(spin_lattice_tensor_cos,2)+torch.pow(spin_lattice_tensor_sin,2))
+        self.magent_tensor_mean_full = torch.mean(torch.sqrt(torch.pow(spin_lattice_tensor_cos,2)+torch.pow(spin_lattice_tensor_sin,2)))
 
         magnetisation_tensor_variance = torch.sum(torch.pow((magnetisation_tensor-magnetisation_tensor_mean),2))/(sample_nmb-1)
 
@@ -564,9 +565,9 @@ class Observables():
 
         #need fastermagnetisation beforehand
         ##this is for absolute magent but should be magentic vector
-        ##magnet_suscep = (self.magnetisation_tensor_mean_2-torch.pow(self.magnetisation_tensor_mean,2))/self.temperature
+        magnet_suscep = (self.magent_tensor_mean_full_2-torch.pow(self.magent_tensor_mean_full,2))/self.temperature
         #print('compare norm',self.magent_tensor_mean_full_2)
-        magnet_suscep = (self.magent_tensor_mean_full_2-torch.pow(self.magent_tensor_mean_x,2)-torch.pow(self.magent_tensor_mean_y,2))/(self.temperature)
+        ##magnet_suscep = (self.magent_tensor_mean_full_2-torch.pow(self.magent_tensor_mean_x,2)-torch.pow(self.magent_tensor_mean_y,2))/(self.temperature)
 
         return magnet_suscep
 
@@ -627,14 +628,20 @@ class Observables():
 
         index = torch.tensor([0,nneb],device=device)
 
+        index_y = torch.tensor([0,2],device=device)
+
         all_xn = torch.index_select(next_n,dim=2, index=index)
 
+        all_yn = torch.index_select(next_n,dim=2, index=index_y)
 
-        energy_per_link = torch.cos(all_xn[:,:,0]-all_xn[:,:,1]) 
+
+        energy_per_link = torch.cos(all_xn[:,:,0]-all_xn[:,:,1]) #possible full not just one direction ?
+
+        energy_y_per_link = torch.cos(all_yn[:,:,0]-all_yn[:,:,1])
 
         current_per_link = torch.sin(all_xn[:,:,0]-all_xn[:,:,1]) 
 
-        sum_energy_per_link = torch.sum(energy_per_link,dim=1)
+        sum_energy_per_link = torch.sum(energy_per_link+energy_y_per_link,dim=1)
 
         #self.energy_per_link = sum_energy_per_link
 

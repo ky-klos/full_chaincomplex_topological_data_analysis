@@ -27,7 +27,7 @@ import pandas as pd
 
 from observables_analysis_class_26 import Observables
 from filtration_function import TopologicalAnalysis
-from basis_data_production import prepare_data_basis,save_data_basis
+from basis_data_production import prepare_data_basis,save_data_basis,load_in_data_basis
 ##from helper_functions import transformation_pos
 ##from training_september_25_fixed_sum_fourier import CircularUpscaleConv2d, ResidualBlock, AdaIN, UnetGenerator, CircularPad2d, SumPool2d, InceptionConv2d_mini
 
@@ -71,16 +71,17 @@ def return_defect_distances(maximal_distance):
     return distances
 
 ##compare_defect_lattice means here that we take the identical defect_positions for different temperatures
-def calculation_observables(data_type,output_data_path,generator_info=None,gen_folder= None,sim_data_type='full_pinned',larger=False,defect_nmb=2,compare_defect_lattice=False,shifte_to_side_test=False,c_depth=0,noise_size = 1.0, training_data_nmb=350000,nmb_label = 1,maximal_distance= 5,new_data=False,data_path='/localscratch/kyklos/Pytorch_cuda_code/iona/iona_oct_23/Full_training_oct_23/', epochs=[0,5,10,15,20,25,30], generated_data_atributes=[64,0.01,0,5,1,0],simulation_data_path  ='/localscratch/kyklos/Pytorch_cuda_code/iona/iona_oct_23/Full_training_oct_23/full_training_data_gan_low_temp_2_corrected.h5', temperature = 0.1, lattice_size= 16,further_simulated=False,samplesize=1000,rotation=False,later_rotation=True):
+def calculation_observables(data_type,output_data_path,save_basis_data=False,generator_info=None,gen_folder= None,sim_data_type='full_pinned',larger=False,defect_nmb=2,compare_defect_lattice=False,shifte_to_side_test=False,c_depth=0,noise_size = 1.0, training_data_nmb=350000,nmb_label = 1,maximal_distance= 5,new_data=False,data_path='/localscratch/kyklos/Pytorch_cuda_code/iona/iona_oct_23/Full_training_oct_23/', epochs=[0,5,10,15,20,25,30], generated_data_atributes=[64,0.01,0,5,1,0],simulation_data_path  ='/localscratch/kyklos/Pytorch_cuda_code/iona/iona_oct_23/Full_training_oct_23/full_training_data_gan_low_temp_2_corrected.h5', temperature = 0.1, lattice_size= 16,further_simulated=False,samplesize=1000,rotation=False,later_rotation=True):
     with torch.no_grad():
-        oservable_data_spins, oservable_data_defects, path_name, name_list = prepare_data_basis(temperature,lattice_size,device,data_type,simulation_data_path,sim_data_type,new_data,compare_defect_lattice,samplesize,defect_nmb,larger,further_simulated,data_path,generated_data_atributes,training_data_nmb,noise_size,nmb_label,epochs,generator_info,gen_folder)
+        oservable_data_spins, oservable_data_defects, path_name, name_list = load_in_data_basis(temperature, lattice_size, device, data_type, simulation_data_path, sim_data_type, new_data, compare_defect_lattice, samplesize, defect_nmb, larger, further_simulated, data_path, generated_data_atributes, training_data_nmb, noise_size, nmb_label, epochs, generator_info,  output_data_path, gen_folder,new_data)
         nmb_distances = int(len(name_list))
         max_distances = max(name_list)
         
         correspodning_data_outname = 'more_data_basis_data_output_{}_{}_nmb_distances{}_max_distance_{}_defect_nmb_{}_samplesize{}_noisesize_{}_compare_{}_batch_gen.h5'.format(data_type,sim_data_type,nmb_distances,max_distances, defect_nmb,samplesize,noise_size,1)
 
         os.makedirs(output_data_path+ path_name, exist_ok=True)
-        save_data_basis(output_data_path=output_data_path,path_name=path_name,correspodning_data_outname=correspodning_data_outname,data_type=data_type,name_list=name_list,epochs=epochs,samplesize=sample_size,observable_data_spins=oservable_data_spins,observable_data_defects=oservable_data_defects,lattice_size=lattice_size,new_data=True)
+        if save_basis_data:
+            save_data_basis(output_data_path=output_data_path,path_name=path_name,correspodning_data_outname=correspodning_data_outname,data_type=data_type,name_list=name_list,epochs=epochs,samplesize=sample_size,observable_data_spins=oservable_data_spins,observable_data_defects=oservable_data_defects,lattice_size=lattice_size,new_data=new_data)
 
 
 
