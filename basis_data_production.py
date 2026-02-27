@@ -674,10 +674,10 @@ def output_analysis_basis(simulated_data_path,temperature,lattice_size,data_type
                 
     return output_spin_dict, output_defect_dict
 
-def load_in_data_basis(temperature, lattice_size, device, data_type, simulation_data_path, sim_data_type, new_data, compare_defect_lattice, samplesize, defect_nmb, larger, further_simulated, data_path, generated_data_atributes, training_data_nmb, noise_size, nmb_label, epochs, generator_info,  output_data_path, gen_folder=None,new=True):
+def load_in_data_basis(temperature, lattice_size, device, data_type, simulation_data_path, sim_data_type, new_data, compare_defect_lattice, samplesize, defect_nmb, larger, further_simulated, data_path,configuration_attributes_dict , training_data_nmb, noise_size, nmb_label, epochs, output_data_path, gen_folder=None,new=True):
         
     if new:
-        oservable_data_spins, oservable_data_defects, path_name, name_list =prepare_data_basis(temperature=temperature, lattice_size=lattice_size, device=device, data_type=data_type, simulation_data_path=simulation_data_path, sim_data_type=sim_data_type, new_data=new_data, compare_defect_lattice=compare_defect_lattice, samplesize=samplesize, defect_nmb=defect_nmb, larger=larger, further_simulated=further_simulated, data_path=data_path, generated_data_atributes=generated_data_atributes, training_data_nmb=training_data_nmb, noise_size=noise_size, nmb_label=nmb_label, epochs=epochs, generator_info=generator_info, gen_folder=gen_folder)
+        oservable_data_spins, oservable_data_defects, path_name, name_list =prepare_data_basis(temperature=temperature, lattice_size=lattice_size, device=device, data_type=data_type, simulation_data_path=simulation_data_path, sim_data_type=sim_data_type, new_data=new_data, compare_defect_lattice=compare_defect_lattice, samplesize=samplesize, defect_nmb=defect_nmb, larger=larger, further_simulated=further_simulated, data_path=data_path, configuration_attributes_dict=configuration_attributes_dict, training_data_nmb=training_data_nmb, noise_size=noise_size, nmb_label=nmb_label, epochs=epochs, gen_folder=gen_folder)
         
     else:    
         oservable_data_spins = []
@@ -711,25 +711,15 @@ def load_in_data_basis(temperature, lattice_size, device, data_type, simulation_
 
 
         elif data_type == 'generated_data':
-            res_critic = generator_info['res_critic']
-            res_gen = generator_info['res_gen']
-            extra_info = generator_info['extra_info']
-            c_depth = generator_info['c_depth']
+
+
 
             if gen_folder is None:
+                path_name = datapath_generation(configuration_attributes_dict,file_type='analysis',analysis_config =[noise_size,training_data_nmb])
 
-                path_name = 'noise_factor_{}_train_nmb_{}_{}_temp_{}_labels_{}_{}_change_epoch_{}_gp_factor_{}_nmb_crit_gen_{}/gen_down_{}_up_{}_batchnorm_{}{}_{}/crit_norm_{}_input_noise_{}_dropout_{}{}_{}/gen_LR_start_{}_changed_{}_crit_LR_start_{}_changed_{}/gaussian_blur_{}/maxfeat_{}_batchsize_{}_depth_{}_{}_{}/critic_4depth_maxfeat_4_depth_{}/gen_normlayer_{}_AdaInstart_{}_gen_regul_{}_extranoise_{}_inception_{}/'.format(noise_size,training_data_nmb,*generated_data_atributes,c_depth, *extra_info) 
             else:
                 path_name = gen_folder
-            
-            if res_critic and not res_gen:
-                path_name += 'res_critic/'
-                
-                data_path += 'res_critic/'
-            elif res_critic and res_gen:
-                path_name += 'residual_blocksres_critic/'
-                
-                data_path += 'residual_blocksres_critic/'
+
                 
                 
             path_name += 'temp_{}/'.format(temperature)
@@ -756,8 +746,59 @@ def load_in_data_basis(temperature, lattice_size, device, data_type, simulation_
                 oservable_data_defects.append(defects)
     return oservable_data_spins, oservable_data_defects, path_name, name_list
 
+def datapath_generation(configuration_attributes_dict,file_type='model',analysis_config = [0,350000]):
+    c_cfg = configuration_attributes_dict['critic_config']
+    g_cfg = configuration_attributes_dict['generator_config']
+    d_cfg = configuration_attributes_dict['data_config']
+    t_cfg = configuration_attributes_dict['training_config']
+    # Alias for readability (optional, but highly recommended)
+    cfg = configuration_attributes_dict
+
+    if file_type == 'model':
+
+        full_path_name = ""
+    elif file_type == 'analysis':
+
+        full_path_name = "noise_factor_{}_train_nmb_{}".format(analysis_config[0],analysis_config[1])
+
+    # 1. General & Optimizer
+    full_path_name += f"/{d_cfg['temperature']}_temp_{d_cfg['temperature_label_nmb']}_labels_{t_cfg['optimizer']}_{t_cfg['optimizer_parameter']}"
+
+    full_path_name += f"_change_epoch_{t_cfg['change_epoch']}_gp_factor_{t_cfg['alpha_gradient_penalty']}_nmb_crit_gen_{t_cfg['nmb_crit_gen']}"
+
+    # 2. Generator Arch
+    full_path_name += f"/gen_down_{g_cfg['downsampling']}_up_{g_cfg['upsampling']}_batchnorm_{g_cfg['batchnorm']}{g_cfg['activation_function']}_{g_cfg['activation_function_slope']}"
+
+    # 3. Critic Arch
+    full_path_name += f"/crit_norm_{c_cfg['norm']}_input_noise_{c_cfg['input_noise']}_dropout_{c_cfg['dropout']}{c_cfg['activation_function']}_{c_cfg['activation_function_slope']}"
+
+    # 4. Learning Rates
+    full_path_name += f"/gen_LR_start_{t_cfg['gen_LR_start']}_changed_{t_cfg['gen_LR_changed']}_crit_LR_start_{t_cfg['crit_LR_start']}_changed_{t_cfg['crit_LR_changed']}"
+
+    # 5. Blur
+    full_path_name += f"/gaussian_blur_{t_cfg['gaussian_blur']}"
+
+    # 6. Depth & Defects
+    full_path_name += f"/maxfeat_{g_cfg['max_feature_map']}_batchsize_{d_cfg['batchsize']}_depth_{g_cfg['add_depth']}_{t_cfg['defect_loss_type']}_{t_cfg['defect_loss_factor']}"
+
+    # 7. Critic Depth
+    full_path_name += f"/critic_4depth_maxfeat_{c_cfg['max_feature_map']}_depth_{c_cfg['add_depth']}"
+
+    # 8. Regularization & Noise (Note the trailing slash / at the end)
+    full_path_name += f"/gen_normlayer_{g_cfg['norm_layer']}_AdaInstart_{g_cfg['adaIn_start']}_gen_regul_{g_cfg['adaIn_regularizer']}_extranoise_{t_cfg['extra_noise']}_inception_5_avg_{g_cfg['conv_after_upsample']}_fourier_{c_cfg['fourier_log']}/"
+
+    # 9. Conditionals
+    if g_cfg['res']:
+        full_path_name += "/res_gen_"
+
+    if c_cfg['res']:
+        full_path_name += "res_critic/"
+
+
+
+    return full_path_name
     
-def prepare_data_basis(temperature, lattice_size, device, data_type, simulation_data_path, sim_data_type, new_data, compare_defect_lattice, samplesize, defect_nmb, larger, further_simulated, data_path, generated_data_atributes, training_data_nmb, noise_size, nmb_label, epochs, generator_info,gen_folder=None):
+def prepare_data_basis(temperature, lattice_size, device, data_type, simulation_data_path, sim_data_type, new_data, compare_defect_lattice, samplesize, defect_nmb, larger, further_simulated, data_path, configuration_attributes_dict, training_data_nmb, noise_size, nmb_label, epochs,gen_folder=None):
     with torch.no_grad():
 
         
@@ -885,25 +926,25 @@ def prepare_data_basis(temperature, lattice_size, device, data_type, simulation_
             oservable_data_spins = []
             oservable_data_defects = []
 
-            res_critic = generator_info['res_critic']
-            res_gen = generator_info['res_gen']
-            extra_info = generator_info['extra_info']
-            c_depth = generator_info['c_depth']
+            ##res_critic = generator_info['res_critic']
+            ##res_gen = generator_info['res_gen']
+            ##extra_info = generator_info['extra_info']
+            ##c_depth = generator_info['c_depth']
             
             if gen_folder is None:
-
-                path_name = 'noise_factor_{}_train_nmb_{}_{}_temp_{}_labels_{}_{}_change_epoch_{}_gp_factor_{}_nmb_crit_gen_{}/gen_down_{}_up_{}_batchnorm_{}{}_{}/crit_norm_{}_input_noise_{}_dropout_{}{}_{}/gen_LR_start_{}_changed_{}_crit_LR_start_{}_changed_{}/gaussian_blur_{}/maxfeat_{}_batchsize_{}_depth_{}_{}_{}/critic_4depth_maxfeat_4_depth_{}/gen_normlayer_{}_AdaInstart_{}_gen_regul_{}_extranoise_{}_inception_{}/'.format(noise_size,training_data_nmb,*generated_data_atributes,c_depth, *extra_info) 
+                path_name = datapath_generation(configuration_attributes_dict)
+                ##path_name = 'noise_factor_{}_train_nmb_{}_{}_temp_{}_labels_{}_{}_change_epoch_{}_gp_factor_{}_nmb_crit_gen_{}/gen_down_{}_up_{}_batchnorm_{}{}_{}/crit_norm_{}_input_noise_{}_dropout_{}{}_{}/gen_LR_start_{}_changed_{}_crit_LR_start_{}_changed_{}/gaussian_blur_{}/maxfeat_{}_batchsize_{}_depth_{}_{}_{}/critic_4depth_maxfeat_4_depth_{}/gen_normlayer_{}_AdaInstart_{}_gen_regul_{}_extranoise_{}_inception_{}/'.format(noise_size,training_data_nmb,*generated_data_atributes,c_depth, *extra_info) 
             else:
                 path_name = gen_folder
             
-            if res_critic and not res_gen:
-                path_name += 'res_critic/'
+            ##if res_critic and not res_gen:
+            ##    path_name += 'res_critic/'
                 
-                data_path += 'res_critic/'
-            elif res_critic and res_gen:
-                path_name += 'residual_blocksres_critic/'
+            ##    data_path += 'res_critic/'
+            ##elif res_critic and res_gen:
+            ##    path_name += 'residual_blocksres_critic/'
                 
-                data_path += 'residual_blocksres_critic/'
+            ##    data_path += 'residual_blocksres_critic/'
                 
                 
             path_name += 'temp_{}/'.format(temperature)

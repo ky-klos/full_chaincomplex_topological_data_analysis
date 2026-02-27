@@ -68,11 +68,11 @@ from basis_data_production import load_in_data_basis
 
 
 
-def get_edge_state_graphs_sim_gen(generator_info,output_data_path,data_path, simulation_data_path, generated_data_attributes, nmb_label,data_type,temperature,gen_folder=None,sim_data_type='full_pinned',nmb_defects =2,noise_size = 1.0, training_data_nmb=100000,lattice_size=16, new_data= True, compare_defect_lattice=False,further_simulated=False,device='cpu',samplesize = 1000,larger=False,epochs=[-1]):
+def get_edge_state_graphs_sim_gen(output_data_path,data_path, simulation_data_path, configuration_attributes_dict, nmb_label,data_type,temperature,gen_folder=None,sim_data_type='full_pinned',nmb_defects =2,noise_size = 1.0, training_data_nmb=100000,lattice_size=16, new_data= True, compare_defect_lattice=False,further_simulated=False,device='cpu',samplesize = 1000,larger=False,epochs=[-1]):
     with torch.no_grad():
             
 
-        oservable_data_spins, oservable_data_defects, path_name, name_list = load_in_data_basis(temperature=temperature, lattice_size=lattice_size, device=device, data_type=data_type, simulation_data_path=simulation_data_path, sim_data_type=sim_data_type, new_data=new_data, compare_defect_lattice=compare_defect_lattice, samplesize=samplesize, defect_nmb=nmb_defects, larger=larger, further_simulated=further_simulated, data_path=data_path, generated_data_atributes=generated_data_attributes, training_data_nmb=training_data_nmb, noise_size=noise_size, nmb_label=nmb_label, epochs=epochs,generator_info=generator_info, output_data_path=output_data_path, gen_folder=gen_folder)
+        oservable_data_spins, oservable_data_defects, path_name, name_list = load_in_data_basis(temperature=temperature, lattice_size=lattice_size, device=device, data_type=data_type, simulation_data_path=simulation_data_path, sim_data_type=sim_data_type, new_data=new_data,new=new_data, compare_defect_lattice=compare_defect_lattice, samplesize=samplesize, defect_nmb=nmb_defects, larger=larger, further_simulated=further_simulated, data_path=data_path, configuration_attributes_dict=configuration_attributes_dict, training_data_nmb=training_data_nmb, noise_size=noise_size, nmb_label=nmb_label, epochs=epochs, output_data_path=output_data_path, gen_folder=gen_folder)
 
         for name_idx,name in enumerate(name_list):
 
