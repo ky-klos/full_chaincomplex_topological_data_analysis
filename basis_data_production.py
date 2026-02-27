@@ -5,7 +5,8 @@ import numpy as np
 import random
 import pandas as pd
 from XY_model_numba import XYSystem
-
+from observables_analysis_class_26 import Observables
+from helper_functions import transformation_pos
 
 def load_in_generator_network(data_path,epoch,temperature_label,input_defects,lattice_size,
                               noise_factor= 1.0, device="cuda"):
