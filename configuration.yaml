@@ -1,0 +1,72 @@
+
+{
+    "generator_config" : {
+        "temperature_label_nmb": 10,
+        "max_feature_map":4,
+        "downsampling":"sum",# max, avg, conv
+        "upsampling":"conv_transposed", # "bilinear_interpol", 
+        "batchnorm":0, #0,1
+        "activation_function": "leaky_Relu",# PRelu, Relu, leaky_Relu
+        "activation_function_slope": 0.01,# deps on type: PRelu: 0.25, Relu: 0. , leaky_Relu: 0.01, 
+        "add_depth":0, # 0, 1,2
+        "conv_after_upsample": "3_5",#three conv layer with kernel size 5
+        "res": False,
+        "norm_layer":None,
+        "adaIn_regularizer":0.5,#for AdaIn regularization
+        "adaIn_start":AdaIn_start,
+        },
+    "critic_config":{
+        "temperature_label_nmb": 10,
+        "max_feature_map":4,
+        "norm": None,#"instance", # only for first_critic 
+        "double_critic":True, # "yes", "no"
+        "identical_config":True,
+        "input_noise":0., #only for first critic
+        "dropout": 0, # 0., 0.3
+        "activation_function": "leaky_Relu",# PRelu, Relu, leaky_Relu
+        "activation_function_slope": 0.01,# deps on type: PRelu: 0.25, Relu: 0. , leaky_Relu: 0.01, 
+        "add_depth":0, # 0, 1,2
+        "fourier_log":"log_10",
+        "res": True,
+        "batch_norm":0,
+        'label_projection':False,
+        'pre_decoding':False,
+        'pos_norm':False,
+        'spectral_norm':False,
+        'fouier_power_spectrum':False,  
+        'fourier_in_forward':False,
+    },
+
+    "data_config" : {
+        "lattice_size" : 16,
+        "temperature": "full" ,# full , temp,'full_with_d4','asymm_{}'.format([1,2]),'full_reduced_{}'.format(5)
+        "batchsize":64,#32, 64, 128
+        "train_data_config":{"compare":int(False), "rotation":int(False), "later_rotation":int(True), "defect_nmb":2},                       
+        "trainings_data_path":"./Training_data/",
+        "datasize":315000, 
+        "temperature_label_nmb": 10,
+    },
+    "train_config" : {
+        "temperature_label_nmb": 10, # 0 or nmb labels
+        "optimizer": "adam",
+        "optimizer_parameter": (0.9,0.999),
+        "alpha_gradient_penalty": 1.0,#1.0
+        "change_epoch":40,
+        "nmb_crit_gen":10, # 5, 10, 20
+        "batchsize":64,#32, 64, 128
+        "defect_loss_type":"L2", # L1, L2
+        "defect_loss_factor":(100.,0.),# (0.,0.), (1.,0.), (10.,0.), ( 50.,0.)
+        "extra_noise":extra_noise,
+        "gaussian_blur":(0.,0.),#gaussianblur, #(3,0.4) ?   
+        "epochs":122,
+        "model_path":'./',
+        "LR_critic_start":1e-4,# 1e-3, 1e-4
+        "LR_critic_changed":1e-4,# 1e-3, 1e-4 same for both critics
+        "LR_gen_start":1e-4,# 1e-3, 1e-4
+        "LR_gen_changed":1e-4,# 1e-3, 1e-4 
+        "start_epoch":0,
+        "save_interval":10,
+        "crtic_factor":0.5,
+    }
+}
+                
