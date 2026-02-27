@@ -17,7 +17,7 @@ import pandas as pd
 
 
 
-
+from basis_data_production import datapath_generation
 
 import numpy as np
 
@@ -154,7 +154,7 @@ def cluster_image_bfs_edge(img):
 
 
                     
-def get_topological_measures_mean(temperature,extra_idx,res_criritc,extra_info, output_data_path,generated_data_attributes,training_data_nmb, simulated_data_path, device, less_index,epsilon_size=2000,sim_data_type='full_pinned',basis_sample_size=1000,number_defects=2,noise_size=1.0,samplesize=100,lattice_size=16,fixed_data=True,data_type_list = ['training_data','generated_data','random_data','zero_temp'], name_idxs = None):
+def get_topological_measures_mean(temperature,extra_idx, output_data_path,configuration_attributes_dict,training_data_nmb, simulated_data_path, device, less_index,epsilon_size=2000,sim_data_type='full_pinned',basis_sample_size=1000,number_defects=2,noise_size=1.0,samplesize=100,lattice_size=16,fixed_data=True,data_type_list = ['training_data','generated_data','random_data','zero_temp'], name_idxs = None):
 
     
     if fixed_data:
@@ -196,11 +196,7 @@ def get_topological_measures_mean(temperature,extra_idx,res_criritc,extra_info, 
         elif data == 'zero_temp':
             path_name_list.append('zero_temperature_solution_comparison_new/')
         elif data == 'generated_data':
-            path = 'noise_factor_{}_train_nmb_{}_{}_temp_{}_labels_{}_{}_change_epoch_{}_gp_factor_{}_nmb_crit_gen_{}/gen_down_{}_up_{}_batchnorm_{}{}_{}/crit_norm_{}_input_noise_{}_dropout_{}{}_{}/gen_LR_start_{}_changed_{}_crit_LR_start_{}_changed_{}/gaussian_blur_{}/maxfeat_{}_batchsize_{}_depth_{}_{}_{}/critic_4depth_maxfeat_4_depth_{}/gen_normlayer_{}_AdaInstart_{}_gen_regul_{}_extranoise_{}_inception_{}/'.format(noise_size,training_data_nmb,*generated_data_attributes,0,*extra_info) 
-             #path_name_list.append('noise_factor_{}_train_nmb_{}_{}_temp_{}_labels_{}_{}_change_epoch_{}_gp_factor_{}_nmb_crit_gen_{}/gen_down_{}_up_{}_batchnorm_{}{}_{}/crit_norm_{}_input_noise_{}_dropout_{}{}_{}/gen_LR_start_{}_changed_{}_crit_LR_start_{}_changed_{}/gaussian_blur_{}/maxfeat_{}_batchsize_{}_depth_{}_{}_{}/critic_4depth_maxfeat_4_depth_{}/'.format(noise_size,training_data_nmb,*generated_data_attributes,0)) 
-            path = 'gen_normlayer_{}_AdaInstart_{}_gen_regul_{}_extranoise_{}_inception_{}/'.format(*extra_info)
-            if res_criritc:
-                path += 'res_critic/'
+            path = datapath_generation(configuration_attributes_dict,file_type='analysis',analysis_config = [noise_size,training_data_nmb])
                 
             path += 'temp_{}/'.format(temperature)
             print(path)
