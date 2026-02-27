@@ -978,7 +978,7 @@ def prepare_data_basis(temperature, lattice_size, device, data_type, simulation_
                 for epoch in epochs:
 
 
-                    generated_data = load_in_generator_network(data_path=data_path,
+                    generated_data = load_in_generator_network(data_path=path_name,
                                                                epoch=epoch,temperature_label=temperature_label,
                                                                input_defects=input_defects,
                                                                lattice_size=lattice_size,
