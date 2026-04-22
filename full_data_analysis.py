@@ -56,7 +56,7 @@ if __name__ == "__main__":
         full_sample_size = 1000
         tda_sample_size = 100
         epochs = [-1]
-        temps = [0.1,0.2,0.3]
+        temps = [0.1]
         lattice_size = 16
         measures = ['statistical_analysis','graph_analysis','tda_analysis']
         simulation_data_path = './'
