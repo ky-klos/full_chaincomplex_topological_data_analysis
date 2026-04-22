@@ -1,42 +1,12 @@
 import numpy as np
-import random
-
-
-#from skimage.io import imread
-#import matplotlib.pyplot as plt
-#%matplotlib inline ~ magic function backend for IPython : output of plotting
-#commands displayed inline within frontends directly below code, that it produced
-
-#from sklearn.model_selection import train_test_split
-
-
-
 import torch
-
-
 import h5py
-
-#import pickle
 import pandas as pd
-
-#from matplotlib.collections import LineCollection
-
-#import seaborn as sb
-
-#import plotly.graph_objects as go
-
 from observables_analysis_class_26 import Observables
-from filtration_function import TopologicalAnalysis
-from basis_data_production import prepare_data_basis,save_data_basis,load_in_data_basis
-##from helper_functions import transformation_pos
-##from training_september_25_fixed_sum_fourier import CircularUpscaleConv2d, ResidualBlock, AdaIN, UnetGenerator, CircularPad2d, SumPool2d, InceptionConv2d_mini
 
-#import time
+from basis_data_production import save_data_basis,load_in_data_basis
 
 import os
-
-##from XY_model_slow_sep_23_numba import XYSystem
-
 
 spin_configurations = []
 defect_configurations_real = []
@@ -44,22 +14,20 @@ temperatures=[]
 generator_epochs = []
 vortex_numbers= []
 lattice_size = 16
-#temp = 0.1
+
 gen_temp = 0
-#magnetisations = []
+
 mag_suscept = []
-#energys = []
+
 specific_heat_list = []
 helicity_modulus_list = []
 correlation_function = []
 temperature = []
-#current_per_link_list = []
-#energy_per_link_list = []
+
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 torch.set_default_device(device)
-
 
 def return_defect_distances(maximal_distance):
     distances = []
@@ -67,7 +35,6 @@ def return_defect_distances(maximal_distance):
         for j in range(maximal_distance):
             dist = torch.sqrt(i**2+j**2)
             distances.append(dist)
-
     return distances
 
 ##compare_defect_lattice means here that we take the identical defect_positions for different temperatures
@@ -82,7 +49,7 @@ def calculation_observables(data_type,output_data_path,save_basis_data=False,gen
 
         os.makedirs(output_data_path+ path_name, exist_ok=True)
         if save_basis_data:
-            save_data_basis(output_data_path=output_data_path,path_name=path_name,correspodning_data_outname=correspodning_data_outname,data_type=data_type,name_list=name_list,epochs=epochs,samplesize=sample_size,observable_data_spins=oservable_data_spins,observable_data_defects=oservable_data_defects,lattice_size=lattice_size,new_data=new_data)
+            save_data_basis(output_data_path=output_data_path,path_name=path_name,correspodning_data_outname=correspodning_data_outname,data_type=data_type,name_list=name_list,epochs=epochs,samplesize=samplesize,observable_data_spins=oservable_data_spins,observable_data_defects=oservable_data_defects,lattice_size=lattice_size,new_data=new_data)
 
 
 
@@ -115,20 +82,8 @@ def calculation_observables(data_type,output_data_path,save_basis_data=False,gen
 
         output_energy_distribution_local_full = []
         
-        #name_list = [4.0]
-
 
         for idx,types in enumerate(name_list):
-            
-            ##print('check_defect_nmb',defect_nmb,temperature, torch.all(torch.sum(oservable_data_defects[idx][0].view(-1,lattice_size*lattice_size),dim=1)==0.))
-
-            #print('check',oservable_data_spins[idx][0].size(0))
-
-
-
-
-
-            ##print(types,oservable_data_spins[idx][0].size(0))
 
             if int(oservable_data_spins[idx][0].size(0)) == 10000:
                     sample_nmb = 45
@@ -201,10 +156,8 @@ def calculation_observables(data_type,output_data_path,save_basis_data=False,gen
 
                 defect_lattices, vorticity, vorticity_error, full_vorticity = simulation_observables.faster_vorticity(spin_lattice_tensor=oservable_data_spins[idx][e_idx])
 
-                #print('check v')
-                magentisation, magentisation_error, full_magentisation = simulation_observables.faster_mean_magentisation(oservable_data_spins[idx][e_idx])
+                magentisation, magentisation_error, full_magentisation = simulation_observables.faster_mean_magnetisation(oservable_data_spins[idx][e_idx])
 
-                #print('check m')
                 magentic_suscep = simulation_observables.faster_magnet_suscep()
                 magentic_suscep_alternative = magentic_suscep#simulation_observables.check_sucept_corr_function(oservable_data_spins[idx][e_idx])
 
@@ -214,7 +167,6 @@ def calculation_observables(data_type,output_data_path,save_basis_data=False,gen
 
                 output_energy_distribution_local_per_name.append(energy_distribution_local)
 
-                #print('check e')
                 specific_heat = simulation_observables.faster_specfifc_heat()
             
                 simulation_observables.set_defects_lattices(sim_defect_lattices=oservable_data_defects[idx][e_idx], gen_defect_lattices=defect_lattices)
@@ -226,7 +178,7 @@ def calculation_observables(data_type,output_data_path,save_basis_data=False,gen
 
                 observables_tensor = [specific_heat,magentic_suscep,magentic_suscep_alternative,helicity_modulus]
 
-                sh_error,ms_error,ms_alternative_error,hm_error = simulation_observables.faster_error_calulcation(full_observable_tensor_list=observables_tensor,full_spin_tensor=oservable_data_spins[idx][e_idx], sample_nmb=sample_nmb,sample_size=sample_size)
+                sh_error,ms_error,ms_alternative_error,hm_error = simulation_observables.faster_error_calculation(full_observable_tensor_list=observables_tensor,full_spin_tensor=oservable_data_spins[idx][e_idx], sample_nmb=sample_nmb,sample_size=sample_size)
 
            
 
@@ -273,7 +225,7 @@ def calculation_observables(data_type,output_data_path,save_basis_data=False,gen
                 output_energy_full_list_per_name.append(full_energy)
                 output_defect_diff_full_list_per_name.append(full_defect_diff)
                 output_correlationfunction_full_list_per_name.append(torch.stack(full_correlation_data_sorted, dim=0))
-            #print(output_vorticity_list)
+            
             output_vorticity_list_full.append(torch.stack(output_vorticity_list, dim =0))
             output_defect_lattice_list_full.append(torch.stack(output_defect_lattice_list, dim =0))
             output_defect_diff_list_full.append(torch.stack(output_defect_diff_list, dim =0))
@@ -392,8 +344,6 @@ def calculation_observables(data_type,output_data_path,save_basis_data=False,gen
         
         df_type_observables.to_csv(output_data_path+path_name +outname, index= False)
 
-        #print('distance',name_list)
-
 
         with h5py.File(output_data_path+path_name +outname_full,'w') as h5f:
 
@@ -403,7 +353,7 @@ def calculation_observables(data_type,output_data_path,save_basis_data=False,gen
 
                 print(dist)
 
-                    #print(oservable_data_spins[dist_idx])
+
 
                 dataset_vorticity_compare = h5f.create_dataset('vorticity_{}'.format(dist), shape=(int(len(epochs)),samplesize,1), dtype='float')
                 dataset_magent_compare = h5f.create_dataset('magentisation{}'.format(dist), shape=(int(len(epochs)),samplesize,1), dtype='float')
@@ -415,19 +365,12 @@ def calculation_observables(data_type,output_data_path,save_basis_data=False,gen
 
                 for e_dix,epoch in enumerate(epochs):
 
-                        #print(output_correlationfunction_full_list[dist_idx][e_dix].size())
-
-
                     dataset_energy_local[e_dix] = output_energy_distribution_local_full[dist_idx][e_dix].view(1,-1,lattice_size*lattice_size).cpu().numpy()
                     dataset_vorticity_compare[e_dix] = output_vorticity_full_list[dist_idx][e_dix].view(1,-1,1).cpu().numpy()
                     dataset_magent_compare[e_dix] = output_magentisation_full_list[dist_idx][e_dix].view(1,-1,1).cpu().numpy()
                     dataset_energy_compare[e_dix] = output_energy_full_list[dist_idx][e_dix].view(1,-1,1).cpu().numpy()
                     dataset_defect_diff_compare[e_dix] = output_defect_diff_full_list[dist_idx][e_dix].view(1,-1,1).cpu().numpy()
-                        #print('check')
                     dataset_corr_compare[e_dix] = output_correlationfunction_full_list[dist_idx][e_dix].view(1,-1,int(len(distance_parameter))).cpu().numpy()
                         
-
-
-
 if __name__ == "__main__":
     pass

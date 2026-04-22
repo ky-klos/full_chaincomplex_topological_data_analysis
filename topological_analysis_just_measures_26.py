@@ -2,20 +2,12 @@
 
 from filtration_function import TopologicalAnalysis
 
-
-
-
-
 import torch
-
-
 
 import h5py
 import time 
 
 import pandas as pd
-
-
 
 from basis_data_production import datapath_generation
 
@@ -30,7 +22,7 @@ torch.set_default_device(device)
 
 
 @jit(nopython=True)
-def minkovski_with_edges_numba(cluster_list):
+def minkowski_with_edges_numba(cluster_list):
 
     #liste mit anzahl 3,2,1 in dim 2 von unterliste
     #now also with 4
@@ -71,9 +63,6 @@ def run_bfs(img, x, y, visited):
                 visited.add((x, y_new))
                 queue.append((x, y_new))
                 cluster.append([x, y_new])
- 
- 
-       
  
     return cluster
  
@@ -125,10 +114,9 @@ def run_bfs_edge(img, x, y, visited):
                 queue.append((x, y_new))
                 cluster.append([x, y_new,img[x][y_new]])
  
-
- 
     return cluster
  
+
 def cluster_image_bfs_edge(img):
  
     size = img.shape
@@ -148,21 +136,15 @@ def cluster_image_bfs_edge(img):
                     cluster = run_bfs_edge(img, x_coord, y_coord, visited)
                     cluster_list.append(cluster)
  
-    
     return cluster_list
 
-
-
                     
-def get_topological_measures_mean(temperature,extra_idx, output_data_path,configuration_attributes_dict,training_data_nmb, simulated_data_path, device, less_index,epsilon_size=2000,sim_data_type='full_pinned',basis_sample_size=1000,number_defects=2,noise_size=1.0,samplesize=100,lattice_size=16,fixed_data=True,data_type_list = ['training_data','generated_data','random_data','zero_temp'], name_idxs = None):
+def get_topological_measures_mean(temperature,extra_idx, output_data_path,configuration_attributes_dict,training_data_nmb, simulated_data_path, device, less_index,epsilon_size=2000,sim_data_type='full_pinned',basis_sample_size=1000,number_defects=2,noise_size=1.0,samplesize=100,lattice_size=16,fixed_data=True,data_type_list = ['training_data','generated_data','random_data','zero_temp'], name_idxs = None, epoch=-1):
 
     
     if fixed_data:
         
         before_sim_load = time.time()
-         
-         #+'defect_for_analysis_full_distances_{}_sample_{}.h5'.format(temperature,1000)
-         
          
         if sim_data_type == 'full_pinned':
             if number_defects > 2 or lattice_size > 16 or temperature > 0.1:
@@ -171,13 +153,9 @@ def get_topological_measures_mean(temperature,extra_idx, output_data_path,config
 
             else:
                 with h5py.File(simulated_data_path+'defect_for_analysis_full_distances_{}_latticesize_{}_defect_nmb_{}_sample_{}.h5'.format(temperature,lattice_size,number_defects,basis_sample_size), 'r') as h5f:
-                #with h5py.File(simulated_data_path+ 'defect_for_analysis_full_distances_{}_latticesize_{}_defect_nmb_{}_compared.h5'.format(temperature,lattice_size,number_defects), 'r') as h5f:
-
                     name_list = np.array(h5f['distances'])
         else:
             with h5py.File(simulated_data_path+'defect_for_analysis_full_distances_{}_{}_latticesize_{}_defect_nmb_{}_sample_{}.h5'.format(sim_data_type,temperature,lattice_size,number_defects,basis_sample_size), 'r') as h5f:
-                #with h5py.File(simulated_data_path+ 'defect_for_analysis_full_distances_{}_latticesize_{}_defect_nmb_{}_compared.h5'.format(temperature,lattice_size,number_defects), 'r') as h5f:
-
                 name_list = np.array(h5f['distances'])            
                 
         after_sim_load = time.time()
@@ -203,10 +181,7 @@ def get_topological_measures_mean(temperature,extra_idx, output_data_path,config
             path_name_list.append(path)
             
         elif data == 'training_data':
-            if sim_data_type == 'full_pinned':
-                path_name_list.append('training_data_full_distance_temp_{}_new/'.format(temperature))
-            else:
-                path_name_list.append('training_data_full_distance_temp_{}_new_{}/'.format(temperature,sim_data_type))
+            path_name_list.append('training_data_full_distance_temp_{}_new_{}/'.format(temperature,sim_data_type))
         elif data == 'full_data':
             path_name_list.append('not_fixed_data_full_temp_{}/'.format(temperature))
 
@@ -246,21 +221,13 @@ def get_topological_measures_mean(temperature,extra_idx, output_data_path,config
             list_output_name_per_distance.append(out_put_name)
             list_output_name_per_distance_long.append(out_put_name_long)
 
-            if sim_data_type == 'full_pinned':
-                with h5py.File(output_data_path+ path_name +'{}_Plaquette_edge_graph_rep_before_epsilon_comparison_{}_temp_{}_nmb_defects_{}_latticesize_{}.h5'.format(name,data_type,temperature,number_defects,lattice_size),'r') as h5f:
-                    
-                    plaquettes = torch.from_numpy(np.array(h5f['Plaquette'])).view(-1,lattice_size,lattice_size).to(torch.float32)[less_index]
-                    edges_x = torch.from_numpy(np.array(h5f['Edge x'])).view(-1,lattice_size,lattice_size).to(torch.float32)[less_index]
-                    edges_y = torch.from_numpy(np.array(h5f['Edge y'])).view(-1,lattice_size,lattice_size).to(torch.float32)[less_index]
-                    defects = torch.from_numpy(np.array(h5f['Defects'])).view(-1,lattice_size,lattice_size).to(torch.float32)[less_index]
-            
-            else:
-                with h5py.File(output_data_path+ path_name +'{}_{}_Plaquette_edge_graph_rep_before_epsilon_comparison_{}_temp_{}_nmb_defects_{}_latticesize_{}.h5'.format(name,sim_data_type,data_type,temperature,number_defects,lattice_size),'r') as h5f:
-                    plaquettes = torch.from_numpy(np.array(h5f['Plaquette'])).view(-1,lattice_size,lattice_size).to(torch.float32)[less_index]
 
-                    edges_x = torch.from_numpy(np.array(h5f['Edge x'])).view(-1,lattice_size,lattice_size).to(torch.float32)[less_index]
-                    edges_y = torch.from_numpy(np.array(h5f['Edge y'])).view(-1,lattice_size,lattice_size).to(torch.float32)[less_index]
-                    defects = torch.from_numpy(np.array(h5f['Defects'])).view(-1,lattice_size,lattice_size).to(torch.float32)[less_index]
+            with h5py.File(output_data_path+ path_name +'{}_{}_Plaquette_edge_graph_rep_before_epsilon_comparison_{}_temp_{}_nmb_defects_{}_latticesize_{}_epoch_{}.h5'.format(name,sim_data_type,data_type,temperature,number_defects,lattice_size,epoch),'r') as h5f:
+                plaquettes = torch.from_numpy(np.array(h5f['Plaquette'])).view(-1,lattice_size,lattice_size).to(torch.float32)[less_index]
+
+                edges_x = torch.from_numpy(np.array(h5f['Edge x'])).view(-1,lattice_size,lattice_size).to(torch.float32)[less_index]
+                edges_y = torch.from_numpy(np.array(h5f['Edge y'])).view(-1,lattice_size,lattice_size).to(torch.float32)[less_index]
+                defects = torch.from_numpy(np.array(h5f['Defects'])).view(-1,lattice_size,lattice_size).to(torch.float32)[less_index]
             list_plaquettes_per_distance.append(plaquettes.to(device))
             list_edges_x_per_distance.append(edges_x.to(device))
             list_edges_y_per_distance.append(edges_y.to(device))
@@ -318,9 +285,6 @@ def get_topological_measures_mean(temperature,extra_idx, output_data_path,config
 
             betti_number_euler_charactistic = []
 
-            #full_euler_list = []
-
-            #start_time = time.time()
             prev_plaq = None
             prev_edge = None
 
@@ -328,9 +292,6 @@ def get_topological_measures_mean(temperature,extra_idx, output_data_path,config
 
             dictionary_persistence_holes = {}
 
-
-
-            ##epsilon_size = 2000
             angular_filt = (np.pi+0.1)/epsilon_size
 
             full_cluster_plq_area = {}
@@ -353,7 +314,6 @@ def get_topological_measures_mean(temperature,extra_idx, output_data_path,config
                 if prev_plaq is not None:
                     plaq_diff = (torch.sum(prev_plaq!=plaquette_per_epsilon))
                 prev_plaq = plaquette_per_epsilon
-                #print(plaquette_per_epsilon.shape)
 
                 edges_x_per_epsilon = full_list_edges_x[n_idx][data_idx] <= (angular_filt*epsilon)
 
@@ -364,7 +324,6 @@ def get_topological_measures_mean(temperature,extra_idx, output_data_path,config
                 edge_percolation_list.append((full_bond_percolation).cpu())
 
                 full_edge_matrix_per_epsilon = topological_analysis_tool.make_full_edge_matrix_with_definite_holes(epsilon=0.00175*epsilon, edge_x=full_list_edges_x[n_idx][data_idx].view(-1,lattice_size*lattice_size), edge_y=full_list_edges_y[n_idx][data_idx].view(-1,lattice_size*lattice_size),plaq=full_list_plaquettes[n_idx][data_idx].view(-1,lattice_size*lattice_size))
-                #print(full_edge_matrix_per_epsilon[0])
                 # check if holes changed at all (4s) or if they stayed the same (persistet) or chluster changed, if vertex is still vertex or know part of cluster, or cluster still same clsuter or part of bigger cluster     
                 ##topological_analysis_tool.simplices_ordering(full_edge_matrix_list=full_edge_matrix_per_epsilon,epsilon=epsilon)
                 
@@ -402,7 +361,7 @@ def get_topological_measures_mean(temperature,extra_idx, output_data_path,config
 
                 mean_cluster_euler_plq_list_alternative = []
                 full_euler_plq_list_alternative = []
-                #TODO : dictionaries output 
+
                 per_epsilon_cluster_plq_area = {}
                 per_epsilon_cluster_plq_perimeter = {}
                 per_epsilon_cluster_plq_euler = {}
@@ -417,7 +376,7 @@ def get_topological_measures_mean(temperature,extra_idx, output_data_path,config
 
                         hash_val = plq.cpu().numpy().data.tobytes()
                         if hash_val in calc_dict:
-                            #print(calc_dict[hash_val])
+
                             full_euler_plq_list.append(calc_dict[hash_val]['plq_euler'].clone())
                             full_cluster_nmb_plq_list.append(calc_dict[hash_val]['plq_cluster_nmb'].clone())
                             full_area_plq_list.append(calc_dict[hash_val]['plq_area'].clone())
@@ -549,10 +508,6 @@ def get_topological_measures_mean(temperature,extra_idx, output_data_path,config
 
                         full_cluster_nmb_edge_list.append(torch.tensor([float(len(cluster_edge_list))]))
 
-
-
-
-
                         full_euler_plqauette_list_per_epsilon = []
 
                         full_diameter_list_per_epsilon = []
@@ -562,15 +517,12 @@ def get_topological_measures_mean(temperature,extra_idx, output_data_path,config
 
                         vertex_in_cluster_counter = []
 
-
-                        
-
                         if int(len(cluster_edge_list)) > 0:
-                            full_euler_list_per_epsilon,full_euler_list_per_epsilon_correct = minkovski_with_edges_numba([np.array(c) for c in cluster_edge_list])
+                            full_euler_list_per_epsilon,full_euler_list_per_epsilon_correct = minkowski_with_edges_numba([np.array(c) for c in cluster_edge_list])
 
                             cluster_lattices_list = []
                             for cluster_idx,cluster in enumerate(cluster_edge_list):
-                                #print(cluster)
+                                
                                 clusterHash = str(cluster)
                                 if clusterHash not in cluster_calc_dict:
                                     cluster_calc_dict[clusterHash] = topological_analysis_tool.diameter_radius_graph(cluster)
@@ -579,34 +531,11 @@ def get_topological_measures_mean(temperature,extra_idx, output_data_path,config
                                 full_diameter_list_per_epsilon.append(torch.tensor([diameter],dtype=float,device=device))
                                 full_radius_list_per_epsilon.append(torch.tensor([radius],dtype=float,device=device))
 
-                                #print(cluster[:][2])
-
                                 cluster_tensor = torch.tensor(cluster)
 
                                 hole_counter.append((cluster_tensor[:,2]==4).sum())
                                 vertex_in_cluster_counter.append((cluster_tensor[:,2]==2).sum())
 
-                                #if torch.sum(cluster_tensor[:,2]==3) > 1:
-                                #    
-                                #    
-                                #    if (torch.sum(cluster_tensor[:,2]==4) > 0) and (torch.sum(cluster_tensor[:,2]==3) >= 4):
-                                #
-                                #        xpositions = cluster_tensor[cluster_tensor[:,2]==4,0]
-                                #        ypositions = cluster_tensor[cluster_tensor[:,2]==4,1]
-                                #
-                                #        cluster_tensor[cluster_tensor[:,2]==3,0]
-                                #
-                                #    else:
-                                #        full_euler_plqauette_list_per_epsilon.append(torch.flatten(torch.tensor([torch.sum(torch.tensor(cluster)[:,2]==3)],device=device)))
-                                #
-                                #else:
-                                #    
-                                #    full_euler_plqauette_list_per_epsilon.append(torch.flatten(torch.tensor([0.0],device=device)))
-
-                                #other_euler_nmb = topological_analysis_tool.minkovski_with_edges(cluster)
-
-                                #full_euler_list_per_epsilon.append(torch.tensor([other_euler_nmb],dtype=float,device=device))
-                                #cluster_lattices_list.append(cluster_lattices_zero)
 
                             full_euler_edge_list.append(torch.flatten(torch.mean(torch.tensor(full_euler_list_per_epsilon).float())))
                             full_euler_edge_list_correct.append(torch.flatten(torch.mean(torch.tensor(full_euler_list_per_epsilon_correct).float())))
@@ -619,13 +548,7 @@ def get_topological_measures_mean(temperature,extra_idx, output_data_path,config
                             per_epsilon_cluster_edge_euler[idx] =torch.tensor(full_euler_list_per_epsilon_correct).float()
                             per_epsilon_cluster_edge_diameter[idx] = torch.stack(full_diameter_list_per_epsilon).float()
                             per_epsilon_cluster_edge_radius[idx] = torch.stack(full_radius_list_per_epsilon).float()
-                            #full_cluster_nmb_plq_list[idx] #number of plq objects 
-
-                            ##mean_cluster_euler_plq_list_alternative.append(torch.flatten(torch.mean(torch.stack(full_euler_plqauette_list_per_epsilon))))
-                            ##full_euler_plq_list_alternative.append(torch.flatten(torch.sum(torch.stack(full_euler_plqauette_list_per_epsilon))))
-
-
-
+                            
                         else:
 
                             full_euler_edge_list.append(torch.flatten(torch.tensor([0.0],device=device)))
@@ -638,13 +561,7 @@ def get_topological_measures_mean(temperature,extra_idx, output_data_path,config
 
                             betti_number_euler_charactistic_per_epsilon.append(torch.flatten(torch.tensor([lattice_size**2],device=device)).float())
 
-                            ##mean_cluster_euler_plq_list_alternative.append(torch.flatten(torch.tensor([0.0],device=device)))
-                            ##full_euler_plq_list_alternative.append(torch.flatten(torch.tensor([0.0],device=device)))
 
-
-
-
-                    #print(full_euler_edge_list)
                     edge_epsilon_euler_list.append((torch.stack(full_euler_edge_list, dim =0)).cpu())
                     edge_epsilon_euler_list_correct.append((torch.stack(full_euler_edge_list_correct, dim =0)).cpu())
 
@@ -660,11 +577,6 @@ def get_topological_measures_mean(temperature,extra_idx, output_data_path,config
 
                     betti_number_euler_charactistic.append((torch.stack(betti_number_euler_charactistic_per_epsilon, dim =0)).cpu())
 
-                    ##plq_euler_mean_per_cluster_list_alternative.append(torch.mean(torch.stack(mean_cluster_euler_plq_list_alternative, dim =0)).cpu().numpy())
-
-                    ##plq_euler_list_alternative.append(torch.mean(torch.stack(full_euler_plq_list_alternative, dim =0)).cpu().numpy())
-                    
-                    #betti_number_euler_charactistic.
                 else:
                     edge_epsilon_euler_list.append(edge_epsilon_euler_list[-1])
                     edge_epsilon_euler_list_correct.append(edge_epsilon_euler_list_correct[-1])
@@ -675,21 +587,8 @@ def get_topological_measures_mean(temperature,extra_idx, output_data_path,config
                     full_cluster_edge_euler[epsilon] = full_cluster_edge_euler[epsilon-1]
                     full_cluster_edge_diameter[epsilon] = full_cluster_edge_diameter[epsilon-1]
                     full_cluster_edge_radius[epsilon] = full_cluster_edge_radius[epsilon-1]
-                    ##plq_euler_mean_per_cluster_list_alternative.append(plq_euler_mean_per_cluster_list_alternative[-1])
-                    ##plq_euler_list_alternative.append(plq_euler_list_alternative[-1])
-
+                   
                     betti_number_euler_charactistic.append(betti_number_euler_charactistic[-1])
-
-            ##topological_analysis_tool.boundary_matrices()
-            ##reduced_edge_boundary_matrix,reduced_plq_boundary_matrix = topological_analysis_tool.reduced_boundary_matrices()
-
-            ##h_0_info_birth, h0_info_death, h0_info_unpaired = topological_analysis_tool.get_persistent_info_of_boundary_matrix(reduced_edge_boundary_matrix, homology_group=0)
-            ##h_1_info_birth, h1_info_death, h1_info_unpaired = topological_analysis_tool.get_persistent_info_of_boundary_matrix(reduced_plq_boundary_matrix, homology_group=1)
-
-            ##out_put_name_ph_barcode = '{}_{}_TDA_Measurements_barcode_{}.csv'.format(name,data_type,samplesize)
-
-            ##tda_barcodes = {'birth_h0': h_0_info_birth, 'death_h0':h0_info_death, 'unpaired_0':h0_info_unpaired,
-            #                'birth_h1': h_1_info_birth, 'death_h1':h1_info_death, 'unpaired_1':h1_info_unpaired}
 
             with h5py.File(output_data_path+path_name_list[data_idx]+full_output_names_long[n_idx][data_idx],'w') as h5f:
 
@@ -747,7 +646,6 @@ def get_topological_measures_mean(temperature,extra_idx, output_data_path,config
                                 'plq_cluster_nmb':torch.mean(torch.stack(plq_cluster_nmb_list,dim=0).view(epsilon_size,samplesize),dim=1).cpu().numpy(),
                                 'plq_euler_sum':torch.mean(torch.stack(plq_euler_list,dim=0).view(epsilon_size,samplesize),dim=1).cpu().numpy(),
                                 'plq_euler_mean':torch.mean(torch.stack(plq_euler_mean_per_cluster_list,dim=0).view(epsilon_size,samplesize),dim=1).cpu().numpy(), 
-                                ##'plq_euler_sum_alternative_v_edge_cluster':plq_euler_list_alternative,'plq_euler_mean_alternative_v_edge_cluster':plq_euler_mean_per_cluster_list_alternative, 
                                 'plq_percol':torch.mean(torch.stack(plq_percolation_list,dim=0).view(epsilon_size,samplesize),dim=1).cpu().numpy(), 
                                 'edge_percol':torch.mean(torch.stack(edge_percolation_list,dim=0).view(epsilon_size,samplesize),dim=1).cpu().numpy(),
                                 'full_euler_new_wo_faces':torch.mean(torch.stack(edge_epsilon_euler_list,dim=0).view(epsilon_size,samplesize),dim=1).cpu().numpy(), 
@@ -759,13 +657,10 @@ def get_topological_measures_mean(temperature,extra_idx, output_data_path,config
             
             df_tda_measurements = pd.DataFrame.from_dict(tda_measurements)
 
-            ##df_tda_barcodes = pd.DataFrame.from_dict(dict([(k,pd.Series(v)) for k,v in tda_barcodes.items()]))
-            #print(full_output_names[n_idx][data_idx])
-
+          
             df_tda_measurements.to_csv(output_data_path+path_name_list[data_idx]+full_output_names[n_idx][data_idx],index=False)
 
-            ##df_tda_barcodes.to_csv(output_data_path+path_name_list[data_idx]+out_put_name_ph_barcode,index=False)
-            
+           
             topological_analysis_tool.boundary_matrices()
             reduced_edge_boundary_matrix,reduced_plq_boundary_matrix = topological_analysis_tool.reduced_boundary_matrices()
             
@@ -791,9 +686,6 @@ def get_topological_measures_mean(temperature,extra_idx, output_data_path,config
                 dataset_sample_idx[:] = np.array(less_index)
 
 
-#get_topological_measures_mean(output_data_path='/localscratch/kyklos/topo_scribt/',generated_data_attributes=generated_data_atributes_list_v2[3],noise_size = 1.0, training_data_nmb=100000,simulated_data_path='/localscratch/kyklos/topo_scribt/', device='cpu', temperature=0.1,samplesize=100,lattice_size=16,fixed_data=True,data_type_list = ['generated_data'], name_idxs = None)
-
-###import argparse
 if __name__ == '__main__':  
     import argparse 
     import random
@@ -818,10 +710,9 @@ if __name__ == '__main__':
                 
             print(less_idx)
             return less_idx
-     #parse name_idxs
     parser = argparse.ArgumentParser(description='Process some integers.')
 
-# ##    #can be None
+
     parser.add_argument('--name_idxs', type=int, nargs='+', help='an integer for name idxs to calculate')
     args = parser.parse_args()
     
