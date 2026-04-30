@@ -62,5 +62,5 @@ if __name__ == "__main__":
         simulation_data_path = './'
         output_data_path = './'
         gen_folder = './'
-        full_analysis(device=device,measures=measures,simulation_data_path=simulation_data_path,data_type=data_type, sim_type=sim_type,defect_nmb=defect_nmb,temperatures=temps,output_data_path=output_data_path,new_data=True,new_basis_data=False,less_idx_list = [True,True],configuration_attributes_dict=configuration_attributes_dict,gen_folder=gen_folder,save_basis_data=True,full_sample_size =full_sample_size,tda_sample_size=tda_sample_size,epochs=epochs,lattice_size=lattice_size)
+        full_analysis(device=device,measures=measures,simulation_data_path=simulation_data_path,data_type=data_type, sim_type=sim_type,defect_nmb=defect_nmb,temperatures=temps,output_data_path=output_data_path,new_data=False,new_basis_data=False,less_idx_list = [True,True],configuration_attributes_dict=configuration_attributes_dict,gen_folder=gen_folder,save_basis_data=False,full_sample_size =full_sample_size,tda_sample_size=tda_sample_size,epochs=epochs,lattice_size=lattice_size)
 
